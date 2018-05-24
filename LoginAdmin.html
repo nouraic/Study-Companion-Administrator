@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+    <title>Login - Study Companion Administrator</title>
+	<script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
+    <script src="firebaseconfig.js"></script>
+    <script src="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.css" />
+    <link rel="stylesheet" href="loginStyles.css">
+    <link href="https://fonts.googleapis.com/css?family=Heebo:100" rel="stylesheet">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+</head>
+
+<body>
+    <h2>Study Companion Administrator</h2>
+    <div id="firebaseui-auth-container"></div>
+    <div id="loader">Loading...</div>
+    <div id=logos>
+        <text>Created by:</text>
+        <img src="CompSciLogo(GreenBig).png">
+    </div>
+    <script>
+        var ui = new firebaseui.auth.AuthUI(firebase.auth());
+        var uiConfig = {
+          callbacks: {
+            signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+              // User successfully signed in.
+              // Return type determines whether we continue the redirect automatically
+              // or whether we leave that to developer to handle.
+              return true;
+            },
+            uiShown: function() {
+              document.getElementById('loader').style.display = 'none';
+            }
+          },
+          // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
+          signInFlow: 'popup',
+          'credentialHelper': firebaseui.auth.CredentialHelper.NONE,
+          signInSuccessUrl: 'Admin.html',
+          signInOptions: [
+            firebase.auth.EmailAuthProvider.PROVIDER_ID
+          ],
+          // Terms of service url.
+          tosUrl: '<your-tos-url>'
+        };
+        ui.start('#firebaseui-auth-container', uiConfig);
+    </script>
+</body>
+
+    
+    
+</html>

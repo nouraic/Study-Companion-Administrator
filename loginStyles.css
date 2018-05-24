@@ -1,0 +1,39 @@
+* {
+    font-family: 'Heebo', sans-serif;
+    overflow: hidden;
+}
+
+#logos {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.white {
+    background-color: white;
+}
+
+h2 {
+    font-size: 5em;
+    text-align: center;
+    width: 100%;
+    background-color: dodgerblue;
+    color: white;
+}
+
+img {
+    height: 5em;
+    width: 5em;
+    margin-top: 10vw;
+}
+
+body {
+    background-color: dodgerblue;
+}
+
+text {
+    font-size: 2vw;
+    color: white;
+    margin-top: 10vw;
+    margin-left: 5.5em;
+}

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Study Companion Administration</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="xlsx.full.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
+  <script src="firebaseconfig.js"></script>
+  <script src="checkUserSignedIn.js"></script>
+  <script src="tabs.js"></script>     
+  <link href="https://fonts.googleapis.com/css?family=Heebo:100" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+</head>
+<body>
+
+    <ul>
+      <li><a class="title">Study Companion Administrator</a></li>
+      <li style="float:right"><a class="active" onclick="logout()">Logout</a></li>
+    </ul>
+
+    <div class="main">
+        <div class="leftSideNav">
+            <p class="tools">TOOLS</p>
+            <button id="homeTab" class="tablinks leftSideNavButtons" onclick="openTab(event, 'intro')">HOME</button>
+            <button id="searchTab" class="tablinks leftSideNavButtons" onclick="openTab(event, 'search')">ADD/DELETE A COURSE</button>
+            <button id="reportedTab" class="tablinks leftSideNavButtons" onclick="openTab(event, 'reported')">VIEW REPORTED POSTS</button>
+            <button id="uploadTab" class="tablinks leftSideNavButtons" onclick="openTab(event, 'upload')">UPLOAD LIST OF NEW COURSES</button>
+            <button id="helpTab" class="tablinks leftSideNavButtons" onclick="openTab(event, 'help')">HELP</button>
+        </div>
+        
+        <!-- main content goes here -->
+        <div class="rightSideContent">
+            
+            <!-- home/intro tab -->
+            <div id="intro" class="tabContent">
+                <article>
+                    This website is for the use of managing the Study Companion mobile application featured on the Google Play Store
+                </article>
+                <p>To navigate around, use the toolbar on the left labeled "Tools"</p>
+                <p>For more help, please click on the help button in the tool bar</p>
+            </div>
+            
+            <!-- add / delete / search for a course tab -->
+            <div id="search" class="tabContent">
+                <input id="searchbar" class="bar" type="text" placeholder="Search a course to add it or delete it...">
+                <button id="searchButton">SEARCH</button>
+                <div id="searchedCourseDiv"></div>
+                <h2 class="courseHeader">All Current Courses: (ID/Name)</h2>
+                <div id="coursesDiv"></div>
+            </div>
+            
+            <!-- reported tab -->
+            <div id="reported" class="tabContent">
+                <h1>Reported Posts</h1>
+                <div id="reports">
+                    <div id="report">
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- upload tab -->
+            <div id="upload" class="tabContent">
+                <h1>Upload a file</h1>
+                <article>Here upload an excel file of the current semester's courses, this will erase all data in the database and import the new courses into the database.</article>
+                <form action="upload.php" method="post" enctype="multipart/form-data">
+                    <br>
+                    <input type="file" name="fileToUpload" id="fileToUpload">
+                    <br>
+                    <input id="sub" type="submit" value="Upload" name="submit">
+                    <div id="feedbackDiv"></div>
+                </form>
+                <button id="sendToFirebase">SEND TO FIREBASE</button>
+                <div id="feedbackDiv2"></div>
+            </div>
+            
+            <!-- help tab -->
+            <div id="help" class="tabContent">
+                <article>
+                    Frequently Asked Questions
+                </article>
+                <a id=instructionManual href="https://docs.google.com/document/d/1-Te88DH2Dkh_04_C3uwesInRvgBiAs4d7LqjdYNPMgU/edit?usp=sharing">Click to view the instruction manual click here</a>
+                <br/>
+                <br/>
+                <h1 id=q>Adding an Excel sheet of courses</h1>
+                <p id=answer>When uploading an Excel sheet with all the courses offered in the new semester, be sure that the course ID is in the "Faculty" column and the Course Name is in the "Seats Open" column, once that is complete click on the "Send to Firebase" button</p>
+                <br/>
+                <br/>
+                <h1 id=q>Reported Posts</h1>
+                <p id=answer>You can view all of the reported posts in the "View Reported Posts" tab, here you can decide whether the post should be deleted or not, if the post does not violate any issues, then click "dismiss" to dismiss the report posts</p>
+            </div>
+             
+        </div>
+    </div>
+    
+    <!--THIS SCRIPT IS TO SET BUTTON PROPERTIES ON CLICKS AND TAB NAVIGATION -->
+    <script>
+        // HOME TAB
+        var homeTab = document.getElementById("homeTab");
+        homeTab.onclick = function () { setButtonStyle(this, 'intro'); };
+        
+        // ADD DELETE TAB
+        var addDeleteTab = document.getElementById("searchTab");
+        addDeleteTab.onclick = function () { setButtonStyle(this, 'search'); };
+        
+        // REPORTED TAB
+        var reportedTab = document.getElementById("reportedTab");
+        reportedTab.onclick = function () { setButtonStyle(this, 'reported'); };
+        
+        // UPLOAD TO FIREBASE TAB
+        var uploadTab = document.getElementById("uploadTab");
+        uploadTab.onclick = function () { setButtonStyle(this, 'upload'); };
+        
+        // HELP TAB
+        var helpTab = document.getElementById("helpTab");
+        helpTab.onclick = function () { setButtonStyle(this, 'help'); };
+        
+        var tab = getParameterByName('tab', window.location.href);
+        
+        var feedbackDiv = document.getElementById("feedbackDiv");
+                
+        // if page reloaded and on tab 
+        if(tab=="upload") {
+            openTab(event, 'upload');               // reopen tab
+            setButtonStyle(uploadTab, 'upload');    // set properties
+        }
+        else {
+            setButtonStyle(homeTab, 'intro');       // otherwise set home tab and open home tab
+        }
+        
+        // GET VARIABLES FROM URL
+        //https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+        
+        // DETERMINE TAB PROPERTIES
+        function setButtonStyle(button, tab) {
+            openTab(event, tab);
+            button.style.backgroundColor="dodgerblue";
+            button.style.color = "white";
+            
+            if(tab=='intro') {
+                setStyle(addDeleteTab);
+                setStyle(reportedTab);
+                setStyle(uploadTab);
+                setStyle(helpTab);
+            }
+            if (tab=='search') {
+                setStyle(homeTab);
+                setStyle(reportedTab);
+                setStyle(uploadTab);
+                setStyle(helpTab);
+            }
+            if (tab=='reported') {
+                setStyle(addDeleteTab);
+                setStyle(homeTab);
+                setStyle(uploadTab);
+                setStyle(helpTab);
+            }
+            if (tab=='upload') {
+                setStyle(addDeleteTab);
+                setStyle(reportedTab);
+                setStyle(homeTab);
+                setStyle(helpTab);
+            }
+            if (tab=='help') {
+                setStyle(addDeleteTab);
+                setStyle(reportedTab);
+                setStyle(uploadTab);
+                setStyle(homeTab);
+            }
+        }
+        
+        // SET TAB PROPERTIES
+        function setStyle(button) {
+            button.style.backgroundColor = "#f1f1f1";
+            button.style.color = "black";
+            button.transform = "0.3s";
+        }
+        
+    </script>
+    
+    <script>        
+        var coursesArray = new Array();
+        var reportedArray = new Array();
+        var searchedCourseArray = new Array();
+        
+        var found = false;
+                
+        // ADD DELETE TAB ELEMENTS 
+        var searchButton = document.getElementById("searchButton");
+        searchButton.addEventListener("click",viewAllSearchedCourses);
+        var searchTab = document.getElementById("searchTab");
+        searchTab.addEventListener("click",viewAllCourses);
+        var searchedCourseDiv = document.getElementById("searchedCourseDiv");
+        var searchbar = document.getElementById("searchbar");
+        searchbar.addEventListener("click",removeSearchbarContents);
+        var coursesDiv = document.getElementById("coursesDiv");
+        var feedbackDiv = document.getElementById("feedbackDiv");
+        var feedbackDiv2 = document.getElementById("feedbackDiv2");
+        // ---------------------------------------------------------------------
+        
+        // REPORT POST ELEMENTS
+        var reportedTab = document.getElementById("reportedTab");
+        reportedTab.addEventListener("click",viewReportedPosts);
+        var reportedDiv = document.getElementById("reported");
+        var reportsDiv = document.getElementById("reports");
+        var report = document.getElementById("report");
+        
+        // UPLOAD TAB ELEMENTS
+        var sendToFirebaseButton = document.getElementById("sendToFirebase");
+        sendToFirebaseButton.disabled=true;
+        sendToFirebaseButton.addEventListener("click",uploadCourses);
+        var subButton = document.getElementById("sub");
+        var fileToUpload = document.getElementById("fileToUpload");
+        
+        getCourses();
+        checkConditionofUpload();
+    
+        // FUNCTION DECLARATIONS
+        
+        function getCourses() {
+            coursesArray = [];
+            var gettingCourses = firebase.database().ref("Courses/").orderByKey();
+            gettingCourses.once("value").then(function(snapshot) {
+                snapshot.forEach(function(childSnapshot) {
+                    var courseObj = new Object();
+                    courseObj.ID = childSnapshot.val().ID;
+                    courseObj.Name = childSnapshot.val().Name;
+                    coursesArray.push(courseObj);
+                });
+                // if need something after firebase data loads add here
+            });
+        }
+        
+        // ADD DELETE TAB FUNCTIONS
+                
+        // view all courses that match the users search 
+        function viewAllSearchedCourses() { 
+            found == false;                                                 // default: course not found
+            var courseSearched = searchbar.value;                               
+            coursesArray = [];                                              // clear courses array
+            var query = firebase.database().ref("Courses/").orderByKey();   // get all children under courses
+            query.once("value").then(function(snapshot) {                   
+                snapshot.forEach(function(childSnapshot) {                  // for each course
+                    var courseObj = new Object();                           // create course object
+                    courseObj.ID = childSnapshot.val().ID;                  // get id and create course object id
+                    courseObj.Name = childSnapshot.val().Name;              // get name and create course object name
+                    coursesArray.push(courseObj);                           // put course object into array
+                });
+                if(courseSearched == "") {                                  // if there is nothing in the course search bar
+                    searchedCourseDiv.innerHTML = "";                       // clear search bar
+                    coursesDiv.innerHTML = "";                              // clear courses shown
+                    viewAllCourses();                                       // reshow all courses
+                }
+                else {
+                    coursesDiv.innerHTML="";                                // clear courses shown to prepare to show searched course
+                    searchedCourseArray = [];                               // clear array
+                    var searchIndex = 0;                            
+                    // LOOP THROUGH COURSES TO FIND COURSES THAT MATCH WHAT THE USER SEARCHED
+                    for(i=0; i<coursesArray.length;i++) {
+                        if((courseSearched == coursesArray[i].ID) || (courseSearched == coursesArray[i].Name)) {
+                            searchedCourseArray.push(coursesArray[i]);      //  place course into new array of matches
+                            viewCourse(searchedCourseArray, searchIndex, courseSearched);       // display the course
+                            searchIndex++;                                  
+                            found = true;                                   // course was found
+                        }
+                    }
+                    
+                    // if the course wasnt found, prompt user to add course if they would like
+                    if(!found) {
+                        // create two inputs, a message and a button
+                        var inputCode = document.createElement('input');        // input for course ID
+                        inputCode.type = "text";
+                        inputCode.id = "searchedInput";
+                        inputCode.placeholder = "Course Code";
+                        var inputName = document.createElement('input');        // input for course name
+                        inputName.type = "text";
+                        inputName.id = "searchedInput1";
+                        inputName.placeholder = "Name";
+                        
+                        searchedCourseDiv.append(createElement('p',"The course you have searched does not exist, would you like to add it?","","",""));     // message
+                        searchedCourseDiv.append(createElement('button',"Add Course","onclickAdd",courseSearched,""));  // button   
+                        searchedCourseDiv.append(inputCode);
+                        searchedCourseDiv.append(inputName);
+                    }
+                    else if(searchedCourseArray.length==0) {                // if the user deletes all courses that were searched
+                        searchbar.value="";                                 // clear search bar
+                        viewAllCourses();                                   // display all courses again
+                    }
+                }            
+            });
+        }
+        
+        // view all courses that are in the database
+        function viewAllCourses() {
+            coursesArray = [];                  // clear courses array
+            var query = firebase.database().ref("Courses/").orderByKey();       // get all children under courses
+            query.once("value").then(function(snapshot) {           
+                snapshot.forEach(function(childSnapshot) {                      // for each course
+                    var courseObj = new Object();                               // create course object
+                    courseObj.ID = childSnapshot.val().ID;                      // get course id and create course object id
+                    courseObj.Name = childSnapshot.val().Name;                  // get course name and create course object name
+                    coursesArray.push(courseObj);                               // add course object to array
+                });
+                coursesDiv.innerHTML="";                                        // remove all courses previously shown
+                for(i=0; i<coursesArray.length;i++) {                           // for each course
+                    viewCourse(coursesArray, i, "");                            // display course
+                }            
+            });
+        }
+        
+        // view course (creating individual course div) 
+        function viewCourse(array, i, courseSearched) {
+            var courseDivElement = document.createElement('div');                                       // create div
+            courseDivElement.id="courseDiv";                                    
+            courseDivElement.append(createElement('p',array[i].ID,"","",array));                        // show id
+            courseDivElement.append(createElement('p',array[i].Name,"moveElement","",array));           // show name
+            courseDivElement.append(createElement('button',"Delete Course",i,courseSearched,array));    // create delete button
+            coursesDiv.append(courseDivElement);                
+        }
+        
+        // when user goes clicks add course 
+        function onClickAdd(courseSearched) {
+            var inputCode = document.getElementById("searchedInput");           // get user inputted course id
+            var inputName = document.getElementById("searchedInput1");          // get user inputted course name
+            if(inputCode.value != "" || inputName.value != "") {                // check if null
+                try {
+                    searchedCourseDiv.innerHTML = "";                           // clear search div
+                    firebase.database().ref('Courses/' + inputCode.value).set({ // create course in firebase
+                        ID: inputCode.value,                                    // set course id
+                        Name: inputName.value                                   // set course name
+                    });
+                    searchbar.value = "";                                       // clear search bar
+                    searchedCourseDiv.append(createElement('p',inputCode.value + " was added successfully","","","")); // message
+                    viewAllCourses();                                           // view all courses
+                } catch(error) { searchedCourseDiv.innerHTML = "ERROR, COULD NOT ADD COURSE"; console.log(error)};  // if failed
+            }
+            else {                                                  // if the courseid and or course name is blank
+                inputCode.value = "PLEASE INPUT";                   // prompt message1
+                inputCode.value = "PLEASE INPUT THE COURSE NAME";   // prompt message2
+            }
+        }
+            
+        // when user clicks on a delete button of a course
+        function onClickDelete(id, courseSearched, array) {
+            try {
+                searchedCourseDiv.innerHTML = "";               // clear searched feedback div
+                firebase.database().ref('Courses/' + array[id].ID + '/').remove();      // remove from fitebase
+                searchedCourseDiv.append(createElement('p',array[id].ID +" was deleted successfully","","",""));    // message
+                array.splice(id, 1);                            // remove that course from array                  
+                if(courseSearched == "") {                      // if the course searched is nothing
+                    viewAllCourses();                           // view all courses
+                }
+                else {
+                    viewAllSearchedCourses();                   // otherwise keep showing courses that match searched
+                }
+                // remove this course from all users
+                // get all UIDS 
+                firebase.database().ref("users/").orderByKey().once("value").then(function(snapshot) {
+                    snapshot.forEach(function(childSnapshot) {
+                        userIDArray.push(childSnapshot.key);    
+                    });
+                    for(i=0;i<userIDArray.length;i++) {                 // for each UID remove course deleted 
+                        firebase.database().ref().child('users/'+userIDArray[i]+'/courses/'+array[id].ID+'/').remove();   
+                    }   
+                });
+            // if there was an error deleting off firebase -> show error
+            } catch(error) { searchedCourseDiv.innerHTML = "ERROR, COULD NOT DELETE COURSE"; console.log(error) };
+        }
+        
+        // remove text in search bar on button click
+        function removeSearchbarContents() {
+            searchedCourseDiv.innerHTML = "";
+        }
+        
+        // REPORTED POSTS
+        
+        // view all reported posts
+        function viewReportedPosts() {
+            reportedArray = [];                 // clear reported posts array
+            var getReports = firebase.database().ref("Admin/Reports").orderByKey();     // get all reported posts
+            getReports.once("value").then(function(snapshot) {                          
+                snapshot.forEach(function(childSnapshot) {                              // for each post
+                    var reportedObj = new Object();                                     // create report object
+                                                                                        // create report object objects
+                    reportedObj.CourseName = childSnapshot.val().CourseName;
+                    reportedObj.NumReports = childSnapshot.val().NumReports;
+                    reportedObj.PostID = childSnapshot.val().PostID;
+                    reportedObj.Question = childSnapshot.val().Question;
+                    reportedObj.Subject = childSnapshot.val().Subject;
+                    reportedObj.key = childSnapshot.key;
+                    reportedArray.push(reportedObj);                                     // add to reported object to array
+                });
+                
+                reportsDiv.innerHTML = "";                                               // clear reports div
+                report.innerHTML = "";
+            
+                // for each report in reported array
+                for(i=0; i<reportedArray.length;i++) {
+                    
+                    // create remove button
+                    var removeButton = document.createElement('button');
+                    var removeButtonNode = document.createTextNode("Remove");
+                    removeButton.className = "removeButton";
+                    removeButton.appendChild(removeButtonNode);
+                    removeButton.id = i;                            // set id to index of reported post in array
+                    removeButton.onclick = function () { removeReported(reportedArray[this.id].CourseName, reportedArray[this.id].PostID); };               
+                    
+                    // create dismiss button
+                    var dismissButton = document.createElement('button');           
+                    var dismissButtonNode = document.createTextNode("Dismiss");
+                    dismissButton.className = "dismissButton";
+                    dismissButton.appendChild(dismissButtonNode);
+                    dismissButton.id = i;                           // set id to index of reported post in array
+                    dismissButton.onclick = function () { dismissReported(reportedArray[this.id].CourseName, reportedArray[this.id].PostID); };
+                    
+                    // show information of reported post
+                    report.append(createElement('p',"Course Name: " + reportedArray[i].CourseName,"","",""));
+                    report.append(createElement('p',"Subject: " + reportedArray[i].Subject,"","",""));
+                    report.append(createElement('p',"Question: " + reportedArray[i].Question,"","",""));
+                    report.append(createElement('p',"# of Times Reported: " + reportedArray[i].NumReports,"","",""));
+                    report.append(removeButton);        // add a remove button for the reported post
+                    report.append(dismissButton);       // add a dismiss button for the reported post
+                    reportsDiv.append(report);          // add reported post to list of reported posts
+                }
+            });
+        }
+        
+        // UPLOAD TAB FUNCTIONS
+        
+        // this function is to check if the user just attempted to upload a file to the server
+        function checkConditionofUpload() {
+            var tab = getParameterByName('tab', window.location.href);          // get variables from url   
+            
+            if(tab=="upload") {                                                 // if tab is upload
+                try {
+                    var filename = getParameterByName('v', window.location.href);    // get filename
+
+                    if(filename==null) {                                        // if filename is null
+                        feedbackDiv.className = "error";                        
+                        feedbackDiv.innerHTML = "Error: Please select a file to upload";        // display error
+                    }
+                    else if(filename == "xlsx") {                                // if filename needs to be xlsx
+                        feedbackDiv.className = "error";
+                        feedbackDiv.innerHTML = "Error: Please upload an Excel (xlsx) file";    // display error
+                    }
+                    else if(filename == "error") {                               // if filename is error
+                        feedbackDiv.className = "error";                         // file could not be uploaded
+                        feedbackDiv.innerHTML = "Error: could not upload file. Please be sure to upload an Excel file";
+                    }
+                    else {                                                       // otherwise
+                        feedbackDiv.className = "successful";                    // upload was successful
+                        feedbackDiv.innerHTML = "File was successfully uploaded";   // displau message
+                        sendToFirebaseButton.disabled=false;                     // enable button to send to firebase
+                    }
+                } catch(error) {};    
+            }
+        }
+        
+        // uploading the excel file to Firebase
+        // TO READ FROM EXCEL FILE : https://github.com/SheetJS/js-xlsx
+        function uploadCourses() {
+            // prompt user to be sure they want to clear all courses and reupload new ones
+            if (confirm('Clicking yes will clear the database and post all the new courses for the upcoming semester')) {
+            var file = getParameterByName('v', window.location.href);       // get filename
+            var fileRemoved = file.indexOf("/");                            // since filename has path
+            var filename = file.slice(fileRemoved+1, file.length);          // remove path
+            var classes = new Array();                                      // create a classes array
+            
+            var oReq = new XMLHttpRequest();                                    // create request        
+            
+            try {
+                oReq.open("GET", "uploads/"+filename, true);                    // open uploaded file
+                oReq.responseType = "arraybuffer";                  
+
+                var database = firebase.database(); // The database is now in a variable "database" 
+                var ref = database.ref('Courses'); // Access the "Courses Node" in the tree of data 
+
+                oReq.onload = function(e) {
+                    var arraybuffer = oReq.response;
+
+                    /* convert data to binary string */
+                    var data = new Uint8Array(arraybuffer);
+                    var arr = new Array();
+                    for(var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
+                    var bstr = arr.join("");
+
+                    /* Call XLSX */
+                    var workbook = XLSX.read(bstr, {type:"binary"});
+
+                    /* DO SOMETHING WITH workbook HERE */
+                    var first_sheet_name = workbook.SheetNames[0];
+                    /* Get worksheet */
+                    var worksheet = workbook.Sheets[first_sheet_name];
+
+                    obj = XLSX.utils.sheet_to_json(worksheet,{raw:true});
+                    clearFirebase();                                        // clear firebase
+                    for(var i = 0; i<obj.length; i++) {                     // for each course
+                        var courseObj = new Object;                         // create course object
+                        courseObj.ID = getDescendantProp(obj, i+`.Faculty`);    // get course id under facility column
+                        courseObj.Name = getDescendantProp(obj, i+`.Seats Open`); // get course id under seats open column
+                        classes.push(courseObj);                            // add course to array
+                        writeUserData(i);                                   // write it into firebase
+                    }
+                }
+                oReq.send();    
+                feedbackDiv2.innerHTML="Courses were successfully uploaded to Firebase";        // show message if successful
+                feedbackDiv2.className="successful"                                             // make blue text
+            } catch(error) {        
+                feedbackDiv2.innerHTML="There was an error uploading the courses to firebase";  // show message if unsuccessful
+                feedbackDiv2.className="error";                                                 // make red text
+            };
+            } else { }
+            
+            //https://stackoverflow.com/questions/8051975/access-object-child-properties-using-a-dot-notation-string
+            // simpler way to get object contents
+            function getDescendantProp(obj, desc) {
+                var arr = desc.split(".");
+                while(arr.length && (obj = obj[arr.shift()]));
+                return obj;
+            } 
+            
+            // write course into firebase
+            function writeUserData(i) {
+                firebase.database().ref('Courses/'+classes[i].ID+'/').set({
+                    ID: classes[i].ID,              // write course id
+                    Name: classes[i].Name           // write course name
+                });
+            }
+            
+            // remove all courses from firebase
+            function clearFirebase() {
+                var userIDArray = new Array();                                  // create array of all users' UIDs
+                try {
+                    firebase.database().ref().child('Courses').remove();        // remove all from admin
+                    firebase.database().ref().child('Admin').remove();          // remove all from courses
+                    
+                    // get all UIDS 
+                    firebase.database().ref("users/").orderByKey().once("value").then(function(snapshot) {
+                        snapshot.forEach(function(childSnapshot) {
+                            userIDArray.push(childSnapshot.key);    
+                        });
+                        for(i=0;i<userIDArray.length;i++) {                                                 // for each UID
+                            firebase.database().ref().child('users/'+userIDArray[i]+'/courses').remove();   // remove all courses
+                        }   
+                    });
+                    
+                } catch(error) { console.log("THERE WAS AN ERROR"); }       // if failed error         
+            }
+        }
+        
+        // remove reported posts on user click
+        function removeReported(CourseName, PostID) {
+            firebase.database().ref().child('Admin/Reports/'+CourseName+" "+PostID).remove();   // remove from showing in admin
+            firebase.database().ref().child('Courses/'+CourseName+'/Forum/'+PostID).remove();   // remove from showing in forum 
+            viewReportedPosts();                                                                // refresh reported posts
+        }
+        
+        // dismiss reported posts on user click
+        function dismissReported(CourseName, PostID) {                              
+            firebase.database().ref().child('Admin/Reports/'+CourseName+" "+PostID).remove();   // remove from showing in admin
+            firebase.database().ref().child('Courses/'+CourseName+'/Forum/'+PostID).update({Reports:"0"});  // reset counter
+            viewReportedPosts();                                                                // refresh reported posts
+        }
+        
+        // BASIC FUNCTIONS
+        
+        // creates an html element
+        function createElement(element, elementNode, id, courseSearched, array) {
+            var type = element;
+            var zero = 0;                                               // for when id is 0
+            var element = document.createElement(element);              // create element
+            var elementNode = document.createTextNode(elementNode);     // create text of element
+            element.appendChild(elementNode);                           // append
+            if(id!="") {                                                // if there is an id
+                element.id=id;                                          // set element id
+            } // flaw in setting id to an int 0 -> would read element id as "" after setting it. So do work around
+            if(id==zero) {                                              // if id is 0
+                element.id=zero;                                        // set id to 0
+            }
+            if(type=='button') {                                        // if button
+                if(id=="onclickAdd") {
+                    element.onclick = function () { onClickAdd(courseSearched); };      // set function   
+                }
+                else if(courseSearched=="") {
+                    element.onclick = function () { onClickDelete(this.id, "", array); };   // set function
+                }
+                else {
+                    element.onclick = function () { onClickDelete(this.id, courseSearched, array); };   // set function
+                }
+            }
+            return element;                                             // return element created
+        }
+        
+    </script>
+    
+</body>
+</html>

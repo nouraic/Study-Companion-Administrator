@@ -1,0 +1,354 @@
+* {
+    font-family: 'Heebo', sans-serif;
+    outline: none;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: dodgerblue;
+}
+
+li {
+    float: left;
+    overflow: hidden;
+}
+
+li a {
+    font-size: 2em;
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    overflow: hidden;
+}
+
+.title {
+    font-size: 4em;
+}
+
+.title:hover {
+    text-decoration: none;
+    color: white;
+}
+
+.active {
+    padding-top: auto;
+    padding-bottom: auto;
+    margin-top: .6em;
+    border: solid 2px lightblue;
+    margin-right: 1em;
+}
+
+.active:hover {
+    text-decoration: none;
+    color: white;
+    background: darkblue;
+}
+
+.main {
+    position: fixed;
+    background-color: white;
+    height: 100%;
+    width: 100%;
+}
+
+.leftSideNav{ 
+    float: left;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+    width: 13%;
+    height: 100%;
+}
+
+.leftSideNavButtons {
+    display: block;
+    background-color: inherit;
+    color: black;
+    padding: .5vw 1vw;
+    height: 5em;
+    width: 100%;
+    border: none;
+    outline: none;
+    text-align: left;
+    cursor: pointer;
+    transition: 0.3s;
+    vertical-align: top;
+    margin: 0;
+    font-size: 1.3em;
+}
+
+.leftSideNavButtons:hover {
+    background-color: dodgerblue;
+    color: white;
+    vertical-align: top;
+}
+
+.leftSideNavButtons:focus {
+    background-color: dodgerblue;
+    border: none;
+    outline: none;
+    color: white;
+}
+
+.tools {
+    font-size: 2em;
+    padding: 1.5vw 1vw;
+    font-weight: bold;
+}
+
+.rightSideContent {
+    position: fixed;
+    margin-left: 15vw;
+    height: 100%;
+    width: 85%;
+    border-top: .5em solid white;
+}
+
+
+/* INTRO */
+
+#intro, #help {
+    height: 100%;
+    text-align: center;   
+}
+
+#intro article, #help article {
+    font-size: 3em;
+    margin-top: 2em;
+    padding-bottom: 1em;
+}
+
+#intro p, #help p {
+    font-size: 2em;    
+}
+
+/* SEARCH */
+
+input[type=text] {
+    float: right;
+    padding: .5vw;
+    border: .1em solid dodgerblue;
+    border-radius: 4em;
+    margin-top: 3vw;
+    margin-right: 15vw;
+    font-size: 1.5em;
+    width: 80%;
+    padding-left: 2vw;
+}
+
+input[type=text]:focus {
+    outline: none;
+}
+
+input[type=text]:hover {
+    border: .1em solid darkblue;
+}
+
+#searchButton {
+    position: fixed;
+    background-color: dodgerblue;
+    border-radius: 4em;
+    width: 7%;
+    margin-left: 70vw;
+    margin-top: 3vw;
+    height: 6%;
+    color: white;
+}
+
+#searchButton:focus {
+    outline: none;
+}
+
+#searchButton:active {
+    background-color: darkblue;
+}
+
+#searchedCourseDiv {
+    position: fixed;
+    margin-top: 8em;
+    margin-left: 2vw;
+    width: 75vw;
+    height: 5vw;
+}
+
+#searchedCourseDiv p {
+    font-size: 1.5em;
+    margin-top: 0vw;
+}
+
+#searchedInput, #searchedInput1 {
+    position: absolute;
+    font-size: 1.5em;
+    height: 2vw;
+    width: 12vw;
+    margin-top: -.6vw;
+    padding: 1vw;
+}
+
+#searchedInput1 {
+    margin-left: 13vw;
+    width: 30vw;
+}
+
+#searchedCourseDiv button {
+    background-color: dodgerblue;
+    border-radius: 4em;
+    color: white;
+    position: absolute;
+    margin-top: -1.1vw;
+    margin-left: 45vw;
+    width: 10vw;
+    height: 3vw;
+}
+
+#coursesDiv {
+    position: fixed;
+    margin-top: 18em;
+    margin-left: 2vw;
+    width: 75vw;
+    height: 30vw;
+    overflow: scroll;
+}
+
+#courseDiv p {
+    font-size: 2vw;
+}
+
+#courseDiv #moveElement {
+    position: absolute;
+    margin-top: -3.5vw;
+    margin-left: 18vw;
+}
+
+#coursesDiv #courseDiv button {
+    background-color: dodgerblue;
+    border-radius: 4em;
+    color: white;
+    position: absolute;
+    margin-top: -3.0vw;
+    margin-left: 55vw;
+    width: 10vw;
+    height: 2vw;
+}
+
+.courseHeader {
+    position: fixed;
+    margin-top: 7em;
+    margin-left: 1em;
+}
+
+/* UPLOAD COURSES */
+
+#upload {
+    text-align: center;
+}
+
+#upload h1 {
+    font-size: 4em;
+}
+
+#upload article {
+    font-size: 2em;
+    margin-right: 3vw;
+}
+
+#upload input {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+input[type='file']::-webkit-file-upload-button, input[type='submit'], #sendToFirebase {
+    background-color: dodgerblue;
+    height: 3em;
+    width: 10em;
+    border-radius: 4em;
+    color: white;
+    margin-top: 3vw;
+    outline: none;
+    font-family: 'Heebo', sans-serif;
+}
+
+input[type='submit'] {
+    height: 3em;
+    width: 12em;
+    border-radius: 4em;
+    margin-top: 0vw;
+}
+
+#feedbackDiv, #feedbackDiv2 {
+    margin-top: 3vw;
+    font-size: 2em;
+    font-weight: 900;
+}
+
+.successful {
+    color: dodgerblue;
+}
+
+.error {
+    color: red;
+}
+
+#sendToFirebase {
+    height: 5em;
+    width: 20em;
+    margin-top: 5vw;
+}
+
+#sendToFirebase:disabled {
+    background-color: white;
+    color: dodgerblue;
+}
+
+#reports {
+    border: solid .2vw dodgerblue;
+    overflow: scroll;
+    height: 40vw;
+}
+
+#report { 
+    padding-bottom: 3vw;
+}
+
+#report button{
+    background-color: dodgerblue;
+    border-radius: 5em;
+    color: white;
+    height: 2em;
+    width: 7em;
+    margin-bottom: 3vw;
+}
+
+#report p {
+    font-size: 1.5em;
+}
+
+.buttonStyle {
+    background-color: "#f1f1f1";
+    color = "black";
+    transform: "0.3s";
+}
+
+/* HELP TAB */
+
+#help {
+    text-align: left;
+}
+
+#q {
+    font-size: 3em;
+}
+
+#answer {
+    font-size: 1em;
+}
+
+#instructionManual {
+    font-size: 2em;
+}
+
